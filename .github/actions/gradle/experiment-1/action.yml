@@ -61,3 +61,8 @@ runs:
         # run experiment
         ./01-validate-incremental-building.sh -r ${{ inputs.gitRepo }} $EXTRA_ARGS
       shell: bash
+    - name: Archive receipt
+      uses: actions/upload-artifact@v3
+      with:
+        name: receipt-experiment-1
+        path: gradle-enterprise-gradle-build-validation/.data/01-validate-incremental-building/latest*/exp1-*.receipt

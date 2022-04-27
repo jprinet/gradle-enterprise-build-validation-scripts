@@ -61,3 +61,8 @@ runs:
         # run experiment
         ./03-validate-local-build-caching-different-locations.sh -r ${{ inputs.gitRepo }} $EXTRA_ARGS
       shell: bash
+    - name: Archive receipt
+      uses: actions/upload-artifact@v3
+      with:
+        name: receipt-experiment-3
+        path: gradle-enterprise-gradle-build-validation/.data/03-validate-local-build-caching-different-locations/latest*/exp3-*.receipt
