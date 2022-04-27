@@ -42,32 +42,41 @@ runs:
       run: |
         cd gradle-enterprise-gradle-build-validation
 
-        EXTRA_ARGS=""
+        # Need to process separately arguments that may contain whitespaces
+        ARG_TASKS=""
+        PROTECTED_ARGS=""
+        if [ ! -z "${{ inputs.tasks }}" ]; then
+          ARG_TASKS="-t ${{inputs.tasks }}"
+          PROTECTED_ARGS="-t \'${{inputs.tasks }}\'"
+        fi
+        ARG_ARGS=""
+        if [ ! -z "${{ inputs.args }}" ]; then
+          ARG_ARGS="-a ${{ inputs.args }}"
+          PROTECTED_ARGS="-t ${{inputs.tasks }} -a ${{ inputs.args }}"
+        fi
+
+        # Unprotected arguments
+        UNPROTECTED_ARGS=""
         if [ ! -z "${{ inputs.gitBranch }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -b ${{ inputs.gitBranch }}"
+          UNPROTECTED_ARGS="$UNPROTECTED_ARGS -b ${{ inputs.gitBranch }}"
         fi
         if [ ! -z "${{ inputs.gitCommitId }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -c ${{ inputs.gitCommitId }}"
+          UNPROTECTED_ARGS="$UNPROTECTED_ARGS -c ${{ inputs.gitCommitId }}"
         fi
         if [ ! -z "${{ inputs.projectDir }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -p ${{ inputs.projectDir }}"
-        fi
-        if [ ! -z "${{ inputs.tasks }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -t ${{ inputs.tasks }}"
-        fi
-        if [ ! -z "${{ inputs.args }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -a ${{ inputs.args }}"
+          UNPROTECTED_ARGS="$UNPROTECTED_ARGS -p ${{ inputs.projectDir }}"
         fi
         if [ ! -z "${{ inputs.gradleEnterpriseUrl }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -s ${{ inputs.gradleEnterpriseUrl }}"
+          UNPROTECTED_ARGS="$UNPROTECTED_ARGS -s ${{ inputs.gradleEnterpriseUrl }}"
         fi
         if [ ! -z "${{ inputs.enableGradleEnterprise }}" ]; then
-          EXTRA_ARGS="$EXTRA_ARGS -e"
+          UNPROTECTED_ARGS="$UNPROTECTED_ARGS -e"
         fi
-
+        
         # run experiment
-        ./01-validate-incremental-building.sh -r ${{ inputs.gitRepo }} $EXTRA_ARGS
-
+        #./01-validate-incremental-building.sh -r ${{ inputs.gitRepo }} "${ARG_TASKS}" "${ARG_ARGS}" ${UNPROTECTED_ARGS}
+        ./01-validate-incremental-building.sh -r ${{ inputs.gitRepo }} "${PROTECTED_ARGS}" ${UNPROTECTED_ARGS}
+  
         # set scans url as output
         RECEIPT_FILE=".data/01-validate-incremental-building/latest/exp1-*.receipt"
         echo "::set-output name=buildScanFirstBuild::$(grep "first build" ${RECEIPT_FILE} | sed 's/.* //')"
